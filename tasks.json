@@ -1,0 +1,9 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "description": "修复单元测试失败的问题. build.sh 脚本中的 unit_test_one_by_one 测试没有问题, 而 unit_test 测试, 每次运行的时候会随机出现某些测试出错. 你可以执行 build.sh 进行测试",
+      "done": false
+    }
+  ]
+}
