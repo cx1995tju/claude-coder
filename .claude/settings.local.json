@@ -2,14 +2,17 @@
   "permissions": {
     "allow": [
       "Bash(chmod +x *)",
-      "Bash(bash -n coder.sh)",
-      "Bash(bash -n loop.sh)",
+      "Bash(bash -n *)",
       "Bash(cat)",
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(touch tmp/*)",
       "Read(tmp/**)",
-      "Write(tmp/**)"
+      "Write(tmp/**)",
+      "Read(logs/**)",
+      "Write(logs/**)",
+      "Bash(git -C /Volumes/external/workspace/myGit/CMU400/dpdk-claude add .claude/settings.local.json)",
+      "Bash(git -C /Volumes/external/workspace/myGit/CMU400/dpdk-claude commit -m \"settings: add Edit\\(**\\) and Read\\(**\\) for full file access\")"
     ]
   }
 }
