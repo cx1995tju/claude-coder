@@ -25,6 +25,9 @@ echo "======================================================================"
 
 git diff "$COMMIT~1..$COMMIT" > "$TMPDIR/patch.diff"
 
+# reviewer 不需要 repo 目录，切回 workspace 让 claude 拿到 workspace 的权限
+cd "$WORKSPACE"
+
 REVIEW_PROMPT="You are a code reviewer agent with full tool access. Review the patch below, then write the result to a file.
 
 TASK:
