@@ -2,14 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(chmod +x *)",
-      "Bash(bash -n /Volumes/external/workspace/ai/ai-work-dpdk/loop.sh)",
-      "Bash(bash -n /Volumes/external/workspace/ai/ai-work-dpdk/__TRACKED_VAR__)",
-      "Bash(bash -n /Volumes/external/workspace/ai/ai-work/coder.sh)",
-      "Bash(bash -n /Volumes/external/workspace/ai/ai-work/__TRACKED_VAR__)",
+      "Bash(bash -n coder.sh)",
+      "Bash(bash -n loop.sh)",
       "Bash(cat)",
-      "Bash(bash /tmp/test_coder_flow.sh)",
-      "Bash(bash /tmp/test_realistic.sh)",
-      "Bash(bash -n /Volumes/external/workspace/ai/ai-work/loop.sh)",
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(touch tmp/*)",
