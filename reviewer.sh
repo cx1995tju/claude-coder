@@ -15,6 +15,8 @@ cd "$REPO"
 COMMIT=$(cat "$TMPDIR/last_commit.txt")
 RUN_ID=$(date +%s)
 LOG_FILE="$LOG_DIR/reviewer_${RUN_ID}.log"
+DONE_FILE="$TMPDIR/reviewer_done_${RUN_ID}"
+OUTPUT_FILE="$TMPDIR/review_output_${RUN_ID}.md"
 
 echo "======================================================================"
 echo "[reviewer] $(date '+%Y-%m-%d %H:%M:%S') — reviewing $COMMIT"
@@ -23,7 +25,7 @@ echo "======================================================================"
 
 git diff "$COMMIT~1..$COMMIT" > "$TMPDIR/patch.diff"
 
-REVIEW_PROMPT="You are a stateless senior code reviewer. Review this patch only, then exit.
+REVIEW_PROMPT="You are a code reviewer agent with full tool access. Review the patch below, then write the result to a file.
 
 PATCH:
 $(cat "$TMPDIR/patch.diff")
@@ -57,9 +59,17 @@ At the very end, append a machine-readable block:
 CRITICAL_COUNT: <N>
 WARNING_COUNT: <N>
 FIX_COUNT: <N>
----END---"
+---END---
+
+---
+WHEN YOUR REVIEW IS COMPLETE, do these two steps in order:
+1. Write the complete review (including the ---RESULT--- block) to: ${OUTPUT_FILE}
+2. Run this exact command: touch ${DONE_FILE}
+These MUST be the very last things you do. Do NOT run them before the review is complete."
 
 # ── start claude in a tmux split pane ─────────────────────────────────────
+
+rm -f "$DONE_FILE" "$OUTPUT_FILE"
 
 PANE_ID=$(tmux split-window -h -P -F '#{pane_id}' "claude")
 echo "[reviewer] claude running in pane: $PANE_ID"
@@ -75,29 +85,16 @@ printf '%s' "$REVIEW_PROMPT" | tmux load-buffer -
 tmux paste-buffer -t "$PANE_ID"
 tmux send-keys -t "$PANE_ID" Escape Enter
 
-echo "[reviewer] prompt sent, waiting for review to complete..."
+echo "[reviewer] prompt sent, monitoring for done file..."
 
-# ── monitor pipe-pane log for completion ───────────────────────────────────
+# ── monitor done file ─────────────────────────────────────────────────────
 
-TIMEOUT=600
-ELAPSED=0
-while [ $ELAPSED -lt $TIMEOUT ]; do
-  if [ -f "$LOG_FILE" ] && grep -q '---END---' "$LOG_FILE" 2>/dev/null; then
-    break
-  fi
+while [ ! -f "$DONE_FILE" ]; do
   sleep 2
-  ELAPSED=$((ELAPSED + 2))
 done
 
-if [ $ELAPSED -ge $TIMEOUT ]; then
-  echo "[reviewer] timeout after ${TIMEOUT}s, closing pane"
-fi
-
 sleep 3
-echo "[reviewer] review complete, closing claude pane"
-
-# 抓取 pane 全部内容
-tmux capture-pane -t "$PANE_ID" -p -S - > "$TMPDIR/review_raw_${RUN_ID}.txt"
+echo "[reviewer] done file detected, closing claude pane"
 
 # 发 /exit 让 claude 正常退出
 tmux send-keys -t "$PANE_ID" "/exit" Enter
@@ -105,10 +102,11 @@ sleep 2
 
 # 关掉 claude pane
 tmux kill-pane -t "$PANE_ID" 2>/dev/null || true
+rm -f "$DONE_FILE"
 
 # ── process output ────────────────────────────────────────────────────────
 
-sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' "$TMPDIR/review_raw_${RUN_ID}.txt" > "$TMPDIR/review.md"
+sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' "$OUTPUT_FILE" > "$TMPDIR/review.md"
 
 cp "$TMPDIR/review.md" "$LOG_DIR/review_${RUN_ID}.md"
 cp "$TMPDIR/patch.diff" "$LOG_DIR/patch_${RUN_ID}.diff"
