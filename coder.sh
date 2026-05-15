@@ -49,14 +49,17 @@ $(cat "$MEM_FIXED")
 "
 fi
 
+PROJECT_CONTENT=$(cat "$PROJECT" 2>/dev/null || echo "(no project overview)")
+MEM_CONTENT=$(cat "$MEM" 2>/dev/null || echo "(no project memory)")
+
 PROMPT="You are a persistent coding agent. Complete the task, then signal completion.
 
 PROJECT OVERVIEW:
-$(cat "$PROJECT")
+${PROJECT_CONTENT}
 
 ${FIXED_MEM}
 PROJECT MEMORY (learned facts, may be updated):
-$(cat "$MEM")
+${MEM_CONTENT}
 
 RECENT GIT HISTORY:
 ${GIT_LOG}

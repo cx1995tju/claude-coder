@@ -12,7 +12,7 @@ mkdir -p "$LOG_DIR"
 
 cd "$REPO"
 
-COMMIT=$(cat "$TMPDIR/last_commit.txt")
+COMMIT=$(cat "$TMPDIR/last_commit.txt" 2>/dev/null || git rev-parse HEAD)
 RUN_ID=$(date +%s)
 LOG_FILE="$LOG_DIR/reviewer_${RUN_ID}.log"
 DONE_FILE="$TMPDIR/reviewer_done_${RUN_ID}"
