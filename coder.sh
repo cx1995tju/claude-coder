@@ -9,16 +9,15 @@ PROJECT="$WORKSPACE/.ai/project.md"
 MEM="$WORKSPACE/.ai/state.md"
 MEM_FIXED="$WORKSPACE/.ai/memory_fixed.md"
 TMPDIR="${TMPDIR:-$WORKSPACE/tmp}"
-LOG_DIR="${LOG_DIR:-$WORKSPACE/logs/manual}"
+LOG_DIR="${LOG_DIR:-$TMPDIR/manual}"
 
 mkdir -p "$TMPDIR" "$LOG_DIR"
 
 cd "$REPO"
 
 TASK="${1:-implement pending task}"
-RUN_ID=$(date +%s)
-LOG_FILE="$LOG_DIR/coder_${RUN_ID}.log"
-DONE_FILE="$TMPDIR/coder_done_${RUN_ID}"
+LOG_FILE="$LOG_DIR/coder.log"
+DONE_FILE="$TMPDIR/coder_done"
 
 echo "======================================================================"
 echo "[coder] $(date '+%Y-%m-%d %H:%M:%S') — task: $TASK"
@@ -34,10 +33,10 @@ else
 fi
 
 REVIEW_FEEDBACK=""
-if [ -f "$TMPDIR/review.md" ] && [ "${CODER_AMEND:-0}" = "1" ]; then
+if [ -f "$LOG_DIR/review.md" ] && [ "${CODER_AMEND:-0}" = "1" ]; then
   REVIEW_FEEDBACK="
 REVIEW FEEDBACK FROM LAST ATTEMPT — FIX THESE ISSUES:
-$(cat "$TMPDIR/review.md")
+$(cat "$LOG_DIR/review.md")
 "
 fi
 
@@ -83,17 +82,13 @@ This MUST be the very last thing you do. Do NOT run it before all work is done."
 
 rm -f "$DONE_FILE"
 
-# split-window 天然继承当前 pane 的所有环境变量（代理、认证等），无需手动传 -e
 PANE_ID=$(tmux split-window -h -P -F '#{pane_id}' "claude")
 echo "[coder] claude running in pane: $PANE_ID"
 
-# 等待 claude 初始化
 sleep 2
 
-# pipe-pane 保存完整日志
 tmux pipe-pane -t "$PANE_ID" "cat >> $LOG_FILE"
 
-# 喂 prompt 并提交
 printf '%s' "$PROMPT" | tmux load-buffer -
 tmux paste-buffer -t "$PANE_ID"
 tmux send-keys -t "$PANE_ID" Escape Enter
@@ -109,11 +104,9 @@ done
 sleep 3
 echo "[coder] done file detected, closing claude pane"
 
-# 发 /exit 让 claude 正常退出
 tmux send-keys -t "$PANE_ID" "/exit" Enter
 sleep 2
 
-# 关掉 claude pane
 tmux kill-pane -t "$PANE_ID" 2>/dev/null || true
 rm -f "$DONE_FILE"
 

@@ -6,24 +6,23 @@ WORKSPACE="$SCRIPT_DIR"
 
 REPO="$WORKSPACE/repo"
 TMPDIR="${TMPDIR:-$WORKSPACE/tmp}"
-LOG_DIR="${LOG_DIR:-$WORKSPACE/logs/manual}"
+LOG_DIR="${LOG_DIR:-$TMPDIR/manual}"
 
 mkdir -p "$LOG_DIR"
 
 cd "$REPO"
 
 COMMIT=$(cat "$TMPDIR/last_commit.txt" 2>/dev/null || git rev-parse HEAD)
-RUN_ID=$(date +%s)
-LOG_FILE="$LOG_DIR/reviewer_${RUN_ID}.log"
-DONE_FILE="$TMPDIR/reviewer_done_${RUN_ID}"
-OUTPUT_FILE="$TMPDIR/review_output_${RUN_ID}.md"
+LOG_FILE="$LOG_DIR/reviewer.log"
+DONE_FILE="$TMPDIR/reviewer_done"
+OUTPUT_FILE="$LOG_DIR/review.md"
 
 echo "======================================================================"
 echo "[reviewer] $(date '+%Y-%m-%d %H:%M:%S') — reviewing $COMMIT"
 echo "[reviewer] log: $LOG_FILE"
 echo "======================================================================"
 
-git diff "$COMMIT~1..$COMMIT" > "$TMPDIR/patch.diff"
+git diff "$COMMIT~1..$COMMIT" > "$LOG_DIR/patch.diff"
 
 # reviewer 不需要 repo 目录，切回 workspace 让 claude 拿到 workspace 的权限
 cd "$WORKSPACE"
@@ -34,7 +33,7 @@ TASK:
 $(cat "$TMPDIR/task_desc.txt" 2>/dev/null || echo "(no task info)")
 
 PATCH:
-$(cat "$TMPDIR/patch.diff")
+$(cat "$LOG_DIR/patch.diff")
 
 RULES:
 - no repo assumptions, only review what you see in the diff
@@ -80,13 +79,10 @@ rm -f "$DONE_FILE" "$OUTPUT_FILE"
 PANE_ID=$(tmux split-window -h -P -F '#{pane_id}' "claude")
 echo "[reviewer] claude running in pane: $PANE_ID"
 
-# 等待 claude 初始化
 sleep 2
 
-# pipe-pane 保存完整日志
 tmux pipe-pane -t "$PANE_ID" "cat >> $LOG_FILE"
 
-# 喂 prompt 并提交
 printf '%s' "$REVIEW_PROMPT" | tmux load-buffer -
 tmux paste-buffer -t "$PANE_ID"
 tmux send-keys -t "$PANE_ID" Escape Enter
@@ -102,19 +98,14 @@ done
 sleep 3
 echo "[reviewer] done file detected, closing claude pane"
 
-# 发 /exit 让 claude 正常退出
 tmux send-keys -t "$PANE_ID" "/exit" Enter
 sleep 2
 
-# 关掉 claude pane
 tmux kill-pane -t "$PANE_ID" 2>/dev/null || true
 rm -f "$DONE_FILE"
 
 # ── process output ────────────────────────────────────────────────────────
 
 sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' "$OUTPUT_FILE" > "$TMPDIR/review.md"
-
-cp "$TMPDIR/review.md" "$LOG_DIR/review_${RUN_ID}.md"
-cp "$TMPDIR/patch.diff" "$LOG_DIR/patch_${RUN_ID}.diff"
 
 echo "[reviewer] done"

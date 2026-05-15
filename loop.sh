@@ -37,7 +37,7 @@ done
 # ── logging ─────────────────────────────────────────────────────────────
 
 SESSION_ID=$(date +%Y-%m-%d_%H-%M-%S)
-LOG_DIR="$WORKSPACE/logs/$SESSION_ID"
+LOG_DIR="$TMPDIR/$SESSION_ID"
 LOOP_LOG="$LOG_DIR/loop.log"
 
 mkdir -p "$TMPDIR" "$LOG_DIR"
@@ -59,8 +59,9 @@ task_count() { jq '.tasks | length' "$TASKS_FILE"; }
 
 parse_result() {
   local key="$1"
-  if [ -f "$TMPDIR/review.md" ]; then
-    sed -n '/^---RESULT---$/,/^---END---$/p' "$TMPDIR/review.md" \
+  local review_file="$TASK_LOG_DIR/review.md"
+  if [ -f "$review_file" ]; then
+    sed -n '/^---RESULT---$/,/^---END---$/p' "$review_file" \
       | grep "^${key}:" | head -1 | cut -d' ' -f2
   fi
 }
@@ -133,7 +134,7 @@ for i in $(seq 0 $(( $(task_count) - 1 ))); do
     log "review: critical=$critical_count"
 
     if [ "${critical_count:-0}" -gt 0 ]; then
-      fixes=$(grep '^FIX:' "$TMPDIR/review.md" || true)
+      fixes=$(grep '^FIX:' "$TASK_LOG_DIR/review.md" || true)
       current_desc="$task_desc [REVIEW: $fixes]"
       retry=$((retry + 1))
       CODER_AMEND=1
