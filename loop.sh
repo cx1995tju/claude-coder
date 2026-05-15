@@ -112,6 +112,11 @@ for i in $(seq 0 $(( $(task_count) - 1 ))); do
 
     # coder: 交互式，tmux 窗口
     bash "$WORKSPACE/coder.sh" "$current_desc" || {
+      log "coder failed (exit $?), will retry"
+      retry=$((retry + 1))
+      CODER_AMEND=1
+      continue
+    }
 
     # 把 task 信息留给 reviewer
     echo "$current_desc" > "$TMPDIR/task_desc.txt"
