@@ -9,7 +9,7 @@ PROJECT="$WORKSPACE/.ai/project.md"
 MEM="$WORKSPACE/.ai/state.md"
 MEM_FIXED="$WORKSPACE/.ai/memory_fixed.md"
 TMPDIR="${TMPDIR:-$WORKSPACE/tmp}"
-LOG_DIR="${LOG_DIR:-$TMPDIR/manual}"
+LOG_DIR="${LOG_DIR:-$WORKSPACE/logs/manual}"
 
 mkdir -p "$TMPDIR" "$LOG_DIR"
 
@@ -82,7 +82,8 @@ This MUST be the very last thing you do. Do NOT run it before all work is done."
 
 rm -f "$DONE_FILE"
 
-PANE_ID=$(tmux split-window -h -P -F '#{pane_id}' "claude")
+SPLIT_TARGET="${LOOP_PANE:-}"
+PANE_ID=$(tmux split-window -h ${SPLIT_TARGET:+-t "$SPLIT_TARGET"} -P -F '#{pane_id}' "claude")
 echo "[coder] claude running in pane: $PANE_ID"
 
 sleep 2

@@ -27,6 +27,7 @@ fi
 
 # 从此刻起，我们在 tmux 内部运行
 CURRENT_SESSION=$(tmux display-message -p '#S')
+LOOP_PANE=$(tmux display-message -p '#{pane_id}')
 
 # 确保关键环境变量在 tmux 内对所有新 window 生效
 for var in $(env | cut -d= -f1 | grep -iE '^(http|https|ftp|all|no)_proxy$|^ANTHROPIC|^CLAUDE' 2>/dev/null || true); do
@@ -37,7 +38,7 @@ done
 # ── logging ─────────────────────────────────────────────────────────────
 
 SESSION_ID=$(date +%Y-%m-%d_%H-%M-%S)
-LOG_DIR="$TMPDIR/$SESSION_ID"
+LOG_DIR="$WORKSPACE/logs/$SESSION_ID"
 LOOP_LOG="$LOG_DIR/loop.log"
 
 mkdir -p "$TMPDIR" "$LOG_DIR"
@@ -95,6 +96,7 @@ for i in $(seq 0 $(( $(task_count) - 1 ))); do
 
   export LOG_DIR="$TASK_LOG_DIR"
   export TMPDIR="$TMPDIR"
+  export LOOP_PANE="$LOOP_PANE"
   export TMUX_SESSION="$CURRENT_SESSION"
   export TASK_ID="$task_id"
 

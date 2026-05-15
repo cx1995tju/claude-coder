@@ -6,7 +6,7 @@ WORKSPACE="$SCRIPT_DIR"
 
 REPO="$WORKSPACE/repo"
 TMPDIR="${TMPDIR:-$WORKSPACE/tmp}"
-LOG_DIR="${LOG_DIR:-$TMPDIR/manual}"
+LOG_DIR="${LOG_DIR:-$WORKSPACE/logs/manual}"
 
 mkdir -p "$LOG_DIR"
 
@@ -76,7 +76,8 @@ These MUST be the very last things you do. Do NOT run them before the review is 
 
 rm -f "$DONE_FILE" "$OUTPUT_FILE"
 
-PANE_ID=$(tmux split-window -h -P -F '#{pane_id}' "claude")
+SPLIT_TARGET="${LOOP_PANE:-}"
+PANE_ID=$(tmux split-window -h ${SPLIT_TARGET:+-t "$SPLIT_TARGET"} -P -F '#{pane_id}' "claude")
 echo "[reviewer] claude running in pane: $PANE_ID"
 
 sleep 2
