@@ -9,7 +9,12 @@
       "Bash(cat)",
       "Bash(bash /tmp/test_coder_flow.sh)",
       "Bash(bash /tmp/test_realistic.sh)",
-      "Bash(bash -n /Volumes/external/workspace/ai/ai-work/loop.sh)"
+      "Bash(bash -n /Volumes/external/workspace/ai/ai-work/loop.sh)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(touch /Volumes/external/workspace/ai/ai-work/tmp/*)",
+      "Read(/Volumes/external/workspace/ai/ai-work/tmp/**)",
+      "Write(/Volumes/external/workspace/ai/ai-work/tmp/**)"
     ]
   }
 }
