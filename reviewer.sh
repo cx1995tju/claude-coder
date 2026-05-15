@@ -27,6 +27,9 @@ git diff "$COMMIT~1..$COMMIT" > "$TMPDIR/patch.diff"
 
 REVIEW_PROMPT="You are a code reviewer agent with full tool access. Review the patch below, then write the result to a file.
 
+TASK:
+$(cat "$TMPDIR/task_desc.txt" 2>/dev/null || echo "(no task info)")
+
 PATCH:
 $(cat "$TMPDIR/patch.diff")
 
